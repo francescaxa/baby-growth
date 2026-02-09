@@ -357,7 +357,7 @@
                     const days = Math.ceil((recordDate - birth) / (1000 * 60 * 60 * 24));
                     
                     try {
-                        // 调用 AI 接口 (api/analyze.js)
+                        // 调用 AI 接口
                         const aiRes = await fetch('/api/analyze', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -372,14 +372,15 @@
                         });
                         const aiData = await aiRes.json();
 
-                        // 存入 Supabase
+                        // 存入 Supabase (这里修复了空值报错)
                         const { error } = await supabase.from('records').insert([{
                             baby_id: currentBaby.value.id,
                             date: input.value.date,
                             days,
                             weight: input.value.weight,
                             height: input.value.height,
-                            head: input.value.head,
+                            // 👇 关键修改在这里：如果是空字符串，转换成 null
+                            head: input.value.head ? input.value.head : null,
                             ai_report: aiData.result
                         }]);
 
@@ -387,6 +388,11 @@
                         
                         await fetchRecords(currentBaby.value.id);
                         openReport(aiData.result);
+                        
+                        // 可选：提交成功后清空输入框，但保留日期
+                        input.value.weight = '';
+                        input.value.height = '';
+                        input.value.head = '';
                         
                     } catch(e) {
                         alert('出错了: ' + e.message);
