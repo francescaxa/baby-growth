@@ -1,67 +1,102 @@
+// api/analyze.js
 export const config = {
   runtime: 'edge',
 };
 
-export default async function handler(request) {
+export default async function handler(req) {
   try {
-    const apiKey = process.env.AI_API_KEY;
-    if (!apiKey) throw new Error("Missing API Key");
+    const { days, weight, height, head, gender, name, lang } = await req.json();
+    const isEnglish = lang === 'en';
 
-    const { days, weight, height, head, gender, name, lang } = await request.json();
-    
-    // 3.0 新增：更温暖、更专业的医生人设
-    const genderText = gender === 'male' ? '男宝宝' : '女宝宝';
-    
-    const systemPrompt = `你是一位拥有20年经验的资深儿科专家(Dr. AI)。
-    正在评估宝宝：${name} (${genderText}, 月龄 ${Math.floor(days/30)}个月 ${days%30}天)。
-    当前数据：体重${weight}kg, 身高${height}cm${head ? `, 头围${head}cm` : ''}。
-    
-    请严格按照以下格式输出(不要输出Markdown代码块标记)：
+    // 🌟 核心修改：中英文指令完全对齐
+    const systemInstruction = isEnglish 
+      ? `You are an empathetic, professional AI Pediatrician named "BabyUp Expert". 
+         Target Audience: Anxious parents.
+         Tone: Warm, encouraging, yet scientifically accurate (based on WHO standards).
+         
+         FORMATTING RULES:
+         1. Use standard Markdown.
+         2. Use **Bold** for key data and conclusions (e.g., **P50**, **Normal**).
+         3. Use bullet points for lists.
+         4. Do NOT use plain text blocks; separate ideas with line breaks.` 
+      : `你是一位专业且温暖的 AI 儿科医生，名字叫“BabyUp 专家”。
+         目标听众：关切宝宝成长的家长。
+         基调：温暖、令人放心，同时基于 WHO 标准保持科学严谨。
+         
+         排版规则：
+         1. 必须使用标准 Markdown 语法。
+         2. 关键数据和结论必须使用 **加粗**（例如：**P50**，**完全达标**）。
+         3. 使用列表项（Bullet points）展示细节。
+         4. 段落之间要留空行，保持排版呼吸感。`;
 
-    <h2 style="text-align:center; font-weight:bold; color:#F97316; margin-bottom:20px;">${name}宝宝的体检报告</h2>
+    const userPrompt = isEnglish
+      ? `Baby Profile: Name: ${name}, Gender: ${gender}, Age: ${days} days old.
+         Measurements: Weight: ${weight}kg, Height: ${height}cm, Head Circumference: ${head ? head + 'cm' : 'N/A'}.
 
-    **亲爱的${name}宝宝家长，您好！我是您的AI儿科医生，很高兴为您评估宝宝的健康成长情况。让我们一起来看看${name}宝宝的表现吧！**
+         Please generate a structured report exactly in this order:
+         
+         ### 1. Growth Assessment 📊
+         * Analyze Weight, Height, and Head Circumference separately based on WHO percentiles.
+         * Explicitly state if the baby is in the **Average**, **High**, or **Low** range.
+         * Give a summary sentence: "Overall, ${name} is growing..."
 
-    (空一行)
-    【生长现状评估】
-    (这里请根据WHO标准详细分析百分位，语气要通过肯定和鼓励来缓解家长焦虑)
+         ### 2. What to Expect Next 🚀
+         * Predict growth trends for the next month.
+         * Mention 1-2 developmental milestones to look out for.
 
-    【未来趋势预测】
-    (简述接下来的生长重点)
+         ### 3. Expert Advice for this Month 💡
+         * Provide 2-3 specific tips on nutrition, sleep, or play tailored to a ${days}-day-old baby.`
 
-    【本月龄专属建议】
-    (针对该月龄给出喂养、睡眠或大运动发展的具体建议，分点列出)
+      : `宝宝档案：名字：${name}，性别：${gender}，月龄：${days}天。
+         数据：体重：${weight}kg，身高：${height}cm，头围：${head ? head + 'cm' : '无'}。
 
-    要求：
-    1. 行间距宽松，适合手机阅读。
-    2. 语气温暖、专业、像面对面交谈。
-    3. 重点结论加粗显示。`;
+         请严格按照以下结构生成报告：
 
-    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+         ### 1. 生长现状评估 📊
+         * 基于 WHO 百分位，分别点评体重、身高、头围。
+         * 明确指出宝宝处于 **中等**、**偏高** 还是 **偏低** 区间。
+         * 给出一句总结：“总体来看，${name} 的生长...”
+
+         ### 2. 未来趋势预测 🚀
+         * 预测下一个月的生长速度。
+         * 提醒家长关注 1-2 个即将到来的发育里程碑。
+
+         ### 3. 本月龄专属建议 💡
+         * 针对 ${days} 天大的宝宝，提供 2-3 条关于喂养、睡眠或大运动的具体建议。`;
+
+    // 调用 AI (请确保这里填的是您真实的 API Key)
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${process.env.AI_API_KEY}`,
+        'HTTP-Referer': 'https://babyup.app',
+        'X-Title': 'BabyUp',
       },
       body: JSON.stringify({
-        model: "deepseek-ai/DeepSeek-V3",
+        model: 'google/gemini-2.0-flash-001', // 推荐使用 Gemini 或 GPT-4o-mini
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: "请生成报告" }
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7
-      })
+        temperature: 0.7,
+      }),
     });
 
-    if (!response.ok) throw new Error(`AI API Error: ${response.status}`);
     const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'AI API Error');
+    }
 
-    return new Response(JSON.stringify({ result: data.choices[0].message.content }), {
-      status: 200, headers: { 'Content-Type': 'application/json' }
+    const aiText = data.choices?.[0]?.message?.content || (isEnglish ? "Generating report..." : "正在生成报告...");
+    
+    return new Response(JSON.stringify({ result: aiText }), {
+      headers: { 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error("AI Error:", error);
-    return new Response(JSON.stringify({ result: "专家正在忙碌，请稍后再试。" }), { status: 500 });
+    console.error('API Error:', error);
+    return new Response(JSON.stringify({ error: 'Failed to generate report' }), { status: 500 });
   }
 }
