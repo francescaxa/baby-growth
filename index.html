@@ -22,7 +22,6 @@
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
         
-        /* 报告样式 */
         .report-content h1, .report-content h2, .report-content h3 { color: #EA580C; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.5em; }
         .report-content strong { color: #0f172a; font-weight: 800; background: linear-gradient(120deg, #ffedd5 0%, #ffedd5 100%); background-repeat: no-repeat; background-size: 100% 40%; background-position: 0 88%; }
         .report-content p { line-height: 1.8; margin-bottom: 1.2em; color: #334155; font-size: 0.95rem; text-align: justify; }
@@ -33,6 +32,12 @@
         .chart-tab { @apply px-4 py-2 text-sm font-bold rounded-t-xl border-b-2 border-transparent text-slate-400 transition-all; }
         .chart-tab.active { @apply text-slate-700 bg-slate-50 border-orange-400; }
     </style>
+    <script>
+        window.onerror = function(msg, url, line) {
+            document.body.innerHTML = '<div style="padding:20px;text-align:center;color:red;"><h1>⚠️ App Error</h1><p>'+msg+'</p><p>Line: '+line+'</p><p>请检查 Supabase URL/Key 是否填写正确</p></div>';
+            return false;
+        };
+    </script>
 </head>
 <body class="text-slate-700 min-h-screen">
     <div id="app" class="max-w-6xl mx-auto min-h-screen relative pb-20">
@@ -263,14 +268,13 @@
                 const records = ref([]); const input = ref({ date: new Date().toISOString().split('T')[0], weight: '', height: '', head: '' });
                 const isEditing = ref(false); const editingId = ref(null); const percentiles = ref({ weight: '', height: '', head: '' });
                 const showModal = ref(false); const currentRecord = ref(null); 
-                const standard = ref('who'); // 'who' | 'china'
-                const activeChart = ref('weight'); // 'weight' | 'height' | 'head'
+                const standard = ref('who');
+                const activeChart = ref('weight');
                 const todayDate = new Date().toISOString().split('T')[0];
 
                 function changeStandard(s) { standard.value = s; nextTick(() => { calcPercentiles(); renderCharts(); }); }
 
-                // --- V5.0 Growth Standards Data (含 P3, P50, P97 以画出范围带) ---
-                // 注意：真实开发应把这些海量数据放在数据库，这里为了演示做了简化
+                // --- V5.1 FIXED Growth Data ---
                 const growthData = {
                     who: {
                         weight: { 
@@ -304,23 +308,16 @@
 
                 let mainChart = null;
 
-                // Auth Functions ... (Same as V4)
                 async function handleLogin() { if(!email.value||!password.value) return; loading.value=true; const {data,error}=await supabase.auth.signInWithPassword({email:email.value,password:password.value}); loading.value=false; if(error)alert(error.message);else user.value=data.user; }
                 async function handleRegister() { if(!email.value||!password.value) return; if(password.value.length<6)return alert('Min 6'); loading.value=true; const {data,error}=await supabase.auth.signUp({email:email.value,password:password.value}); loading.value=false; if(error)alert(error.message);else {authMode.value='verify';sentCode.value=true;} }
                 async function handleVerifyOtp() { if(!otpToken.value) return; loading.value=true; const {data,error}=await supabase.auth.verifyOtp({email:email.value,token:otpToken.value,type:'signup'}); loading.value=false; if(error)alert(error.message);else {user.value=data.user;authMode.value='login';} }
                 async function sendResetCode() { if(!email.value) return; loading.value=true; const {error}=await supabase.auth.resetPasswordForEmail(email.value); loading.value=false; if(error)alert(error.message);else alert('Sent'); }
                 async function signOut() { await supabase.auth.signOut(); user.value=null; babies.value=[]; currentBaby.value=null; authMode.value='login'; }
 
-                // App Functions
                 async function fetchBabies() { const {data}=await supabase.from('babies').select('*').order('created_at',{ascending:false}); babies.value=data||[]; }
                 async function createBaby() { if(!newBaby.value.name||!newBaby.value.birth_date)return; if(new Date(newBaby.value.birth_date)>new Date())return alert('No future date'); loading.value=true; const {error}=await supabase.from('babies').insert([{user_id:user.value.id,...newBaby.value}]); loading.value=false; if(!error){await fetchBabies();showAddBabyForm.value=false;} }
                 function selectBaby(baby) { currentBaby.value=baby; fetchRecords(baby.id); }
-
-                async function fetchRecords(babyId) {
-                    const {data}=await supabase.from('records').select('*').eq('baby_id',babyId).order('date',{ascending:false});
-                    records.value=data||[];
-                    nextTick(()=>{calcPercentiles(); renderCharts();});
-                }
+                async function fetchRecords(babyId) { const {data}=await supabase.from('records').select('*').eq('baby_id',babyId).order('date',{ascending:false}); records.value=data||[]; nextTick(()=>{calcPercentiles(); renderCharts();}); }
 
                 function calcPercentiles() {
                     if (!currentBaby.value) return;
@@ -347,26 +344,20 @@
                     loading.value=true;
                     const days=Math.ceil((new Date(input.value.date)-new Date(currentBaby.value.birth_date))/86400000);
                     const payload={baby_id:currentBaby.value.id,date:input.value.date,days,weight:w,height:h,head:input.value.head||null};
-
                     try {
                         let aiReport = null;
                         if (!isEditing.value) {
-                             const aiRes = await fetch('/api/analyze', {
-                                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ ...payload, gender: currentBaby.value.gender, name: currentBaby.value.name, lang: lang.value })
-                            });
+                             const aiRes = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, gender: currentBaby.value.gender, name: currentBaby.value.name, lang: lang.value }) });
                             if (aiRes.ok) { const json = await aiRes.json(); aiReport = json.result; }
                         }
                         if (isEditing.value) {
                             const {error} = await supabase.from('records').update(payload).eq('id', editingId.value);
                             if(error) throw error;
-                            const index = records.value.findIndex(r => r.id === editingId.value);
-                            if (index !== -1) records.value[index] = { ...records.value[index], ...payload };
+                            const index = records.value.findIndex(r => r.id === editingId.value); if (index !== -1) records.value[index] = { ...records.value[index], ...payload };
                         } else {
                             if(aiReport) payload.ai_report = aiReport;
                             const {error} = await supabase.from('records').insert([payload]);
                             if(error) throw error;
-                            // 2.0 新增：如果是新增记录且有 AI 报告，自动弹窗
                             if (aiReport) { currentRecord.value = { ...payload, ai_report: aiReport }; showModal.value = true; }
                             await fetchRecords(currentBaby.value.id);
                         }
@@ -375,7 +366,6 @@
                     } catch(e) { alert(e.message); } finally { loading.value = false; }
                 }
 
-                // ... other functions (edit, delete etc) ...
                 function editRecord(record) { isEditing.value=true; editingId.value=record.id; input.value={...record}; window.scrollTo({top:0,behavior:'smooth'}); calcPercentiles(); }
                 function cancelEdit() { isEditing.value=false; editingId.value=null; input.value={date:new Date().toISOString().split('T')[0],weight:'',height:'',head:''}; percentiles.value={weight:'',height:'',head:''}; }
                 async function deleteRecord(id) { if(confirm('Del?')) { await supabase.from('records').delete().eq('id',id); fetchRecords(currentBaby.value.id); } }
@@ -384,120 +374,47 @@
                 function calculateAge(d) { return Math.ceil((new Date()-new Date(d))/86400000)+' '+t.value.days_old; }
                 function renderMarkdown(text) { return marked.parse(text||''); }
 
-                // V5.0 Super Chart (With Background Curves)
                 function renderCharts() {
                     if(!currentBaby.value) return;
-                    const ctx = document.getElementById('mainChart');
-                    if(!ctx) return;
-                    
-                    if(mainChart) mainChart.destroy(); // 销毁旧图
-                    
+                    const ctx = document.getElementById('mainChart'); if(!ctx) return;
+                    if(mainChart) mainChart.destroy();
                     const sorted = [...records.value].sort((a,b) => a.days - b.days);
                     const labels = sorted.map(r => `Day ${r.days}`);
                     const gender = currentBaby.value.gender;
-                    const type = activeChart.value; // 'weight', 'height', or 'head'
-                    
-                    // 获取当前标准数据 (P3, P50, P97)
+                    const type = activeChart.value;
                     const stdData = growthData[standard.value][type][gender];
-                    // 简单的月份映射 (0-12月)
                     const getStdPoints = (arr) => sorted.map(r => arr[Math.min(Math.floor(r.days/30), 12)]);
-                    
-                    // 颜色配置
                     const colors = { weight: '#F472B6', height: '#2DD4BF', head: '#A78BFA' };
                     const mainColor = colors[type];
-
                     mainChart = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: labels.length ? labels : ['Birth'],
                             datasets: [
-                                // 1. 用户数据 (实线，加粗)
-                                {
-                                    label: `${currentBaby.value.name}`,
-                                    data: sorted.map(r => r[type]),
-                                    borderColor: mainColor,
-                                    backgroundColor: mainColor,
-                                    borderWidth: 4,
-                                    pointRadius: 6,
-                                    pointHoverRadius: 8,
-                                    tension: 0.3,
-                                    order: 1 // 最上层
-                                },
-                                // 2. 标准线 P50 (虚线，深灰)
-                                {
-                                    label: 'P50 (Standard)',
-                                    data: getStdPoints(stdData.p50),
-                                    borderColor: '#94a3b8',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    pointRadius: 0,
-                                    tension: 0.4,
-                                    order: 2
-                                },
-                                // 3. 标准线 P97 (上限，浅灰)
-                                {
-                                    label: 'P97',
-                                    data: getStdPoints(stdData.p97),
-                                    borderColor: '#cbd5e1',
-                                    borderWidth: 1,
-                                    pointRadius: 0,
-                                    tension: 0.4,
-                                    order: 3
-                                },
-                                // 4. 标准线 P3 (下限，浅灰)
-                                {
-                                    label: 'P3',
-                                    data: getStdPoints(stdData.p3),
-                                    borderColor: '#cbd5e1',
-                                    borderWidth: 1,
-                                    pointRadius: 0,
-                                    tension: 0.4,
-                                    fill: '-1', // 填充到上一条线 (P97)，形成灰色背景带
-                                    backgroundColor: 'rgba(241, 245, 249, 0.5)', // 淡淡的背景带
-                                    order: 4
-                                }
+                                { label: `${currentBaby.value.name}`, data: sorted.map(r => r[type]), borderColor: mainColor, backgroundColor: mainColor, borderWidth: 4, pointRadius: 6, pointHoverRadius: 8, tension: 0.3, order: 1 },
+                                { label: 'P50 (Standard)', data: getStdPoints(stdData.p50), borderColor: '#94a3b8', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, tension: 0.4, order: 2 },
+                                { label: 'P97', data: getStdPoints(stdData.p97), borderColor: '#cbd5e1', borderWidth: 1, pointRadius: 0, tension: 0.4, order: 3 },
+                                { label: 'P3', data: getStdPoints(stdData.p3), borderColor: '#cbd5e1', borderWidth: 1, pointRadius: 0, tension: 0.4, fill: '-1', backgroundColor: 'rgba(241, 245, 249, 0.5)', order: 4 }
                             ]
                         },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: { mode: 'index', intersect: false },
-                            plugins: {
-                                legend: { position: 'bottom' },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            if(context.datasetIndex > 0) return context.dataset.label + ': ' + context.formattedValue;
-                                            // 用户数据的 Tooltip
-                                            const val = context.raw;
-                                            const dayIndex = context.dataIndex;
-                                            const r = sorted[dayIndex];
-                                            const month = Math.min(Math.floor(r.days/30), 12);
-                                            const p50 = stdData.p50[month];
-                                            const diff = ((val - p50) / p50) * 100;
-                                            let status = '正常';
-                                            if(diff > 20) status = '偏高'; else if(diff < -20) status = '偏低';
-                                            return `${currentBaby.value.name}: ${val} (${status})`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: { beginAtZero: false, grid: { color: '#f1f5f9' } },
-                                x: { grid: { display: false } }
-                            }
-                        }
+                        options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function(context) { if(context.datasetIndex > 0) return context.dataset.label + ': ' + context.formattedValue; const val = context.raw; const dayIndex = context.dataIndex; const r = sorted[dayIndex]; const month = Math.min(Math.floor(r.days/30), 12); const p50 = stdData.p50[month]; const diff = ((val - p50) / p50) * 100; let status = '正常'; if(diff > 20) status = '偏高'; else if(diff < -20) status = '偏低'; return `${currentBaby.value.name}: ${val} (${status})`; } } } }, scales: { y: { beginAtZero: false, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
                     });
                 }
 
                 onMounted(async () => {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    user.value = session?.user || null; globalLoading.value = false;
-                    supabase.auth.onAuthStateChange((_, s) => { user.value = s?.user || null; if(user.value) fetchBabies(); });
-                    if(user.value) fetchBabies();
+                    try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        user.value = session?.user || null;
+                        globalLoading.value = false;
+                        supabase.auth.onAuthStateChange((_, s) => { user.value = s?.user || null; if(user.value) fetchBabies(); });
+                        if(user.value) fetchBabies();
+                    } catch (e) {
+                        alert('App Init Error: ' + e.message + '. Please check Supabase keys.');
+                        globalLoading.value = false; // Ensure loading stops even on error
+                    }
                 });
 
-                return { user, authMode, email, password, otpToken, sentCode, loading, globalLoading, babies, currentBaby, showAddBabyForm, newBaby, records, input, isEditing, percentiles, submitRecord, editRecord, cancelEdit, deleteRecord, showModal, currentRecord, regenerateReport, openReport, handleLogin, handleRegister, handleVerifyOtp, sendResetCode, signOut, createBaby, selectBaby, calculateAge, lang, t, toggleLang, hasHeadData, changeStandard, standard, calcPercentiles, renderMarkdown, todayDate, activeChart, nextTick, renderCharts };
+                return { user, authMode, email, password, otpToken, sentCode, loading, globalLoading, babies, currentBaby, showAddBabyForm, newBaby, records, input, isEditing, percentiles, submitRecord, editRecord, cancelEdit, deleteRecord, showModal, currentRecord, regenerateReport, openReport, handleLogin, handleRegister, handleVerifyOtp, sendResetCode, signOut, createBaby, selectBaby, calculateAge, lang, t, toggleLang, changeStandard, standard, calcPercentiles, renderMarkdown, todayDate, activeChart, nextTick, renderCharts };
             }
         }).mount('#app');
     </script>
