@@ -28,13 +28,13 @@
         .report-content ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.2em; }
         .report-content li { margin-bottom: 0.5em; color: #475569; }
 
-        /* Chart Tabs */
         .chart-tab { @apply px-4 py-2 text-sm font-bold rounded-t-xl border-b-2 border-transparent text-slate-400 transition-all; }
         .chart-tab.active { @apply text-slate-700 bg-slate-50 border-orange-400; }
     </style>
     <script>
         window.onerror = function(msg, url, line) {
-            document.body.innerHTML = '<div style="padding:20px;text-align:center;color:red;"><h1>⚠️ App Error</h1><p>'+msg+'</p><p>Line: '+line+'</p><p>请检查 Supabase URL/Key 是否填写正确</p></div>';
+            // document.body.innerHTML = '<div style="padding:20px;text-align:center;color:red;"><h1>⚠️ App Error</h1><p>'+msg+'</p><p>Line: '+line+'</p></div>';
+            console.error("Global Error:", msg); // 改为控制台报错，防止测试时吓到用户
             return false;
         };
     </script>
@@ -160,7 +160,7 @@
                                     <div class="relative"><input type="number" v-model="input.head" :placeholder="t.head_ph" @input="calcPercentiles" class="input-glass w-full rounded-xl p-3 text-sm pr-16 font-bold"><span class="absolute right-3 top-3 text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded">{{ percentiles.head }}</span></div>
                                 </div>
                                 <button @click="submitRecord" :disabled="loading" class="btn-brand w-full text-white font-bold py-3 rounded-xl mt-4 shadow-lg flex justify-center items-center gap-2 transform active:scale-95 transition">
-                                    <span v-if="loading" class="animate-spin">⏳</span><span>{{ isEditing ? t.update_btn : t.gen_report }}</span>
+                                    <span v-if="loading" class="animate-spin">⏳</span><span>{{ t.gen_report }}</span>
                                 </button>
                             </div>
                             <div class="bg-white/60 rounded-3xl p-5 max-h-[500px] overflow-y-auto border border-white shadow-sm">
@@ -248,8 +248,8 @@
         const { createApp, ref, onMounted, watch, computed, nextTick } = Vue;
 
         const i18n = {
-            zh: { slogan: "您的 AI 育儿专家", login_tab: "登录", register_tab: "注册", login_btn: "安全登录", register_btn: "立即注册", forgot_password: "忘记密码?", reset_title: "重置密码", verify_title: "验证您的邮箱", send_reset_code: "发送重置代码", back_login: "返回登录", confirm_btn: "确认验证", set_password: "设置密码 (至少6位)", password_label: "密码", email_label: "邮箱地址", sending: "发送中...", send_btn: "获取验证码", code_sent_to: "验证码已发送至", code_label: "6 位数字验证码", verifying: "验证中...", login_confirm: "进入 BabyUp", back_email: "修改邮箱", my_babies: "宝宝列表", logout: "退出", no_baby: "欢迎！先添加一个宝宝档案吧", add_baby: "添加宝宝", add_another: "添加二宝/三宝", back: "返回", new_profile: "新宝宝档案", nickname: "宝宝小名", gender: "性别", boy: "👦 男宝", girl: "👧 女宝", birth_date: "出生日期", saving: "保存中...", create_btn: "创建档案", switch_baby: "切换", days_old: "天大", record_entry: "📝 今日成长记录", edit_mode: "✏️ 编辑记录 (修改后自动同步)", update_btn: "保存并更新图表", weight_ph: "体重 (kg)", height_ph: "身高 (cm)", head_ph: "头围 (cm, 选填)", ai_thinking: "AI 专家思考中...", gen_report: "生成 AI 成长解读 ✨", chart_title: "生长曲线", realtime: "实时", history_title: "📅 历史档案", view_report_btn: "📄 查看报告", gen_report_btn: "✨ 生成报告", report_title: "AI 深度解读", close: "关闭", connecting: "正在连接 BabyUp 云端...", edit: "编辑", del: "删除", no_report_yet: "暂无 AI 报告", outdated_hint: "数据更新后，可重新解读", regenerate: "重新生成报告", logging_in: "登录中...", weight_tab: "体重", height_tab: "身高", head_tab: "头围" },
-            en: { slogan: "Your AI Parenting Expert", login_tab: "Login", register_tab: "Register", login_btn: "Secure Login", register_btn: "Sign Up Now", forgot_password: "Forgot Password?", reset_title: "Reset Password", verify_title: "Verify Your Email", send_reset_code: "Send Reset Code", back_login: "Back to Login", confirm_btn: "Confirm Verify", set_password: "Set Password (min 6 chars)", password_label: "Password", email_label: "Email Address", sending: "Sending...", send_btn: "Get Code", code_sent_to: "Code sent to", code_label: "6-Digit Code", verifying: "Verifying...", login_confirm: "Enter BabyUp", back_email: "Change Email", my_babies: "My Babies", logout: "Logout", no_baby: "Welcome! Add a baby profile first", add_baby: "Add Baby", add_another: "Add Another Baby", back: "Back", new_profile: "New Profile", nickname: "Nickname", gender: "Gender", boy: "👦 Boy", girl: "👧 Girl", birth_date: "Birth Date", saving: "Saving...", create_btn: "Create Profile", switch_baby: "Switch", days_old: "days old", record_entry: "📝 Data Entry", edit_mode: "✏️ Edit Record", update_btn: "Save & Update Charts", weight_ph: "Weight (kg)", height_ph: "Height (cm)", head_ph: "Head Circ. (cm, optional)", ai_thinking: "AI Thinking...", gen_report: "Generate AI Report ✨", chart_title: "Growth Charts", realtime: "Live", history_title: "📅 History", view_report_btn: "📄 View Report", gen_report_btn: "✨ AI Report", report_title: "AI Insight", close: "Close", connecting: "Connecting to BabyUp...", edit: "Edit", del: "Del", no_report_yet: "No Report", outdated_hint: "Data changed? Regenerate report.", regenerate: "Regenerate Report", logging_in: "Logging in...", weight_tab: "Weight", height_tab: "Height", head_tab: "Head" }
+            zh: { slogan: "您的 AI 育儿专家", login_tab: "登录", register_tab: "注册", login_btn: "安全登录", register_btn: "立即注册", forgot_password: "忘记密码?", reset_title: "重置密码", verify_title: "验证您的邮箱", send_reset_code: "发送重置代码", back_login: "返回登录", confirm_btn: "确认验证", set_password: "设置密码 (至少6位)", password_label: "密码", email_label: "邮箱地址", sending: "发送中...", send_btn: "获取验证码", code_sent_to: "验证码已发送至", code_label: "6 位数字验证码", verifying: "验证中...", login_confirm: "进入 BabyUp", back_email: "修改邮箱", my_babies: "宝宝列表", logout: "退出", no_baby: "欢迎！先添加一个宝宝档案吧", add_baby: "添加宝宝", add_another: "添加二宝/三宝", back: "返回", new_profile: "新宝宝档案", nickname: "宝宝小名", gender: "性别", boy: "👦 男宝", girl: "👧 女宝", birth_date: "出生日期", saving: "保存中...", create_btn: "创建档案", switch_baby: "切换", days_old: "天大", record_entry: "📝 今日成长记录", edit_mode: "✏️ 编辑记录 (修改后重新生成报告)", update_btn: "保存并生成报告", weight_ph: "体重 (kg)", height_ph: "身高 (cm)", head_ph: "头围 (cm, 选填)", ai_thinking: "AI 专家思考中...", gen_report: "生成 AI 成长解读 ✨", chart_title: "生长曲线", realtime: "实时", history_title: "📅 历史档案", view_report_btn: "📄 查看报告", gen_report_btn: "✨ 生成报告", report_title: "AI 深度解读", close: "关闭", connecting: "正在连接 BabyUp 云端...", edit: "编辑", del: "删除", no_report_yet: "暂无 AI 报告", outdated_hint: "数据更新后，可重新解读", regenerate: "重新生成报告", logging_in: "登录中...", weight_tab: "体重", height_tab: "身高", head_tab: "头围" },
+            en: { slogan: "Your AI Parenting Expert", login_tab: "Login", register_tab: "Register", login_btn: "Secure Login", register_btn: "Sign Up Now", forgot_password: "Forgot Password?", reset_title: "Reset Password", verify_title: "Verify Your Email", send_reset_code: "Send Reset Code", back_login: "Back to Login", confirm_btn: "Confirm Verify", set_password: "Set Password (min 6 chars)", password_label: "Password", email_label: "Email Address", sending: "Sending...", send_btn: "Get Code", code_sent_to: "Code sent to", code_label: "6-Digit Code", verifying: "Verifying...", login_confirm: "Enter BabyUp", back_email: "Change Email", my_babies: "My Babies", logout: "Logout", no_baby: "Welcome! Add a baby profile first", add_baby: "Add Baby", add_another: "Add Another Baby", back: "Back", new_profile: "New Profile", nickname: "Nickname", gender: "Gender", boy: "👦 Boy", girl: "👧 Girl", birth_date: "Birth Date", saving: "Saving...", create_btn: "Create Profile", switch_baby: "Switch", days_old: "days old", record_entry: "📝 Data Entry", edit_mode: "✏️ Edit Record", update_btn: "Save & Generate Report", weight_ph: "Weight (kg)", height_ph: "Height (cm)", head_ph: "Head Circ. (cm, optional)", ai_thinking: "AI Thinking...", gen_report: "Generate AI Report ✨", chart_title: "Growth Charts", realtime: "Live", history_title: "📅 History", view_report_btn: "📄 View Report", gen_report_btn: "✨ AI Report", report_title: "AI Insight", close: "Close", connecting: "Connecting to BabyUp...", edit: "Edit", del: "Del", no_report_yet: "No Report", outdated_hint: "Data changed? Regenerate report.", regenerate: "Regenerate Report", logging_in: "Logging in...", weight_tab: "Weight", height_tab: "Height", head_tab: "Head" }
         };
 
         createApp({
@@ -274,7 +274,6 @@
 
                 function changeStandard(s) { standard.value = s; nextTick(() => { calcPercentiles(); renderCharts(); }); }
 
-                // --- V5.1 FIXED Growth Data ---
                 const growthData = {
                     who: {
                         weight: { 
@@ -336,40 +335,85 @@
                     percentiles.value.head = getPct('head', input.value.head);
                 }
 
+                // 🌟 V6.1 核心修改：强制全自动生成报告
                 async function submitRecord() {
                     const w=parseFloat(input.value.weight); const h=parseFloat(input.value.height);
                     if(!w||!h) return alert('Input required');
                     if(w<1||w>50) return alert('Invalid weight'); if(h<20||h>150) return alert('Invalid height');
                     if(new Date(input.value.date)>new Date()) return alert('No future date');
+                    
                     loading.value=true;
                     const days=Math.ceil((new Date(input.value.date)-new Date(currentBaby.value.birth_date))/86400000);
                     const payload={baby_id:currentBaby.value.id,date:input.value.date,days,weight:w,height:h,head:input.value.head||null};
+
                     try {
+                        // 1. 强制生成 AI 报告 (无论是新增还是编辑，都重新生成)
+                        // 之前这里有 if(!isEditing) 限制，现在去掉了
                         let aiReport = null;
-                        if (!isEditing.value) {
-                             const aiRes = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, gender: currentBaby.value.gender, name: currentBaby.value.name, lang: lang.value }) });
-                            if (aiRes.ok) { const json = await aiRes.json(); aiReport = json.result; }
+                        const aiRes = await fetch('/api/analyze', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...payload, gender: currentBaby.value.gender, name: currentBaby.value.name, lang: lang.value })
+                        });
+
+                        if (aiRes.ok) { 
+                            const json = await aiRes.json(); 
+                            aiReport = json.result; 
+                        } else {
+                            throw new Error("AI Generation Failed");
                         }
+
+                        // 2. 将 AI 报告加入 payload 保存到数据库
+                        if(aiReport) payload.ai_report = aiReport;
+
                         if (isEditing.value) {
                             const {error} = await supabase.from('records').update(payload).eq('id', editingId.value);
                             if(error) throw error;
-                            const index = records.value.findIndex(r => r.id === editingId.value); if (index !== -1) records.value[index] = { ...records.value[index], ...payload };
                         } else {
-                            if(aiReport) payload.ai_report = aiReport;
                             const {error} = await supabase.from('records').insert([payload]);
                             if(error) throw error;
-                            if (aiReport) { currentRecord.value = { ...payload, ai_report: aiReport }; showModal.value = true; }
-                            await fetchRecords(currentBaby.value.id);
                         }
+                        
+                        // 3. 强制弹窗展示新报告 (Aha Moment!)
+                        currentRecord.value = { ...payload, ai_report: aiReport };
+                        showModal.value = true;
+
+                        await fetchRecords(currentBaby.value.id);
                         nextTick(() => { renderCharts(); calcPercentiles(); });
                         cancelEdit(); 
-                    } catch(e) { alert(e.message); } finally { loading.value = false; }
+
+                    } catch(e) { 
+                        alert('Error: ' + e.message); 
+                    } finally { 
+                        loading.value = false; 
+                    }
+                }
+
+                // 🌟 V6.1 修复重新生成逻辑
+                async function regenerateReport(record) { 
+                    loading.value=true; 
+                    try { 
+                        const aiRes=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({days:record.days,weight:record.weight,height:record.height,head:record.head,gender:currentBaby.value.gender,name:currentBaby.value.name,lang:lang.value})}); 
+                        if(aiRes.ok){ 
+                            const json=await aiRes.json(); 
+                            // 保存到数据库
+                            await supabase.from('records').update({ai_report:json.result}).eq('id',record.id); 
+                            // 更新本地状态并强制弹窗
+                            record.ai_report=json.result; 
+                            currentRecord.value.ai_report=json.result; 
+                            showModal.value = true; // 确保弹窗打开
+                        } else {
+                            throw new Error('AI Service Error'); // 抛出错误以便被 catch 捕获
+                        }
+                    } catch(e){ 
+                        alert('Error generating report: ' + e.message); 
+                    } finally{ 
+                        loading.value=false; 
+                    } 
                 }
 
                 function editRecord(record) { isEditing.value=true; editingId.value=record.id; input.value={...record}; window.scrollTo({top:0,behavior:'smooth'}); calcPercentiles(); }
                 function cancelEdit() { isEditing.value=false; editingId.value=null; input.value={date:new Date().toISOString().split('T')[0],weight:'',height:'',head:''}; percentiles.value={weight:'',height:'',head:''}; }
-                async function deleteRecord(id) { if(confirm('Del?')) { await supabase.from('records').delete().eq('id',id); fetchRecords(currentBaby.value.id); } }
-                async function regenerateReport(record) { loading.value=true; try{ const aiRes=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({days:record.days,weight:record.weight,height:record.height,head:record.head,gender:currentBaby.value.gender,name:currentBaby.value.name,lang:lang.value})}); if(aiRes.ok){ const json=await aiRes.json(); await supabase.from('records').update({ai_report:json.result}).eq('id',record.id); record.ai_report=json.result; currentRecord.value.ai_report=json.result; } }catch(e){alert('Error');}finally{loading.value=false;} }
+                async function deleteRecord(id) { if(confirm('Delete record?')) { await supabase.from('records').delete().eq('id',id); fetchRecords(currentBaby.value.id); } }
                 function openReport(record) { currentRecord.value=record; showModal.value=true; }
                 function calculateAge(d) { return Math.ceil((new Date()-new Date(d))/86400000)+' '+t.value.days_old; }
                 function renderMarkdown(text) { return marked.parse(text||''); }
@@ -409,8 +453,8 @@
                         supabase.auth.onAuthStateChange((_, s) => { user.value = s?.user || null; if(user.value) fetchBabies(); });
                         if(user.value) fetchBabies();
                     } catch (e) {
-                        alert('App Init Error: ' + e.message + '. Please check Supabase keys.');
-                        globalLoading.value = false; // Ensure loading stops even on error
+                        console.error('App Init Error:', e.message);
+                        globalLoading.value = false;
                     }
                 });
 
