@@ -62,4 +62,51 @@ export default async function handler(request) {
       ### 1. 生长现状评估 📊
       (请根据WHO标准详细分析百分位，语气要通过肯定和鼓励来缓解家长焦虑)
 
-      ### 2. 未来趋势预测
+      ### 2. 未来趋势预测 🚀
+      (简述接下来的生长重点)
+
+      ### 3. 本月龄专属建议 💡
+      (针对该月龄给出喂养、睡眠或大运动发展的具体建议，分点列出)
+
+      要求：
+      1. 语气温暖、专业、像面对面交谈。
+      2. 格式：使用标准 Markdown。重点结论用 **加粗** 显示。
+      3. 语言：必须使用中文。`;
+    }
+
+    // 4. 发送请求给 SiliconFlow (DeepSeek) - 保持不变
+    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-ai/DeepSeek-V3", // 您的模型
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: "Generate report / 生成报告" }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024 // 建议加上防止输出中断
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json();
+      console.error("SiliconFlow API Error:", errData);
+      throw new Error(`AI API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // 5. 返回结果
+    return new Response(JSON.stringify({ result: data.choices[0].message.content }), {
+      status: 200, headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error("AI Error:", error);
+    return new Response(JSON.stringify({ result: "Dr. AI is busy, please try again later. / 专家正在忙碌，请稍后再试。" }), { status: 500 });
+  }
+}
