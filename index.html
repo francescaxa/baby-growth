@@ -33,8 +33,7 @@
     </style>
     <script>
         window.onerror = function(msg, url, line) {
-            // document.body.innerHTML = '<div style="padding:20px;text-align:center;color:red;"><h1>⚠️ App Error</h1><p>'+msg+'</p><p>Line: '+line+'</p></div>';
-            console.error("Global Error:", msg); // 改为控制台报错，防止测试时吓到用户
+            console.error("Global Error:", msg); 
             return false;
         };
     </script>
@@ -62,22 +61,22 @@
                         <button @click="authMode = 'register'" :class="authMode === 'register' ? 'bg-white shadow text-orange-500' : 'text-slate-400'" class="flex-1 py-2 rounded-lg font-bold transition">{{ t.register_tab }}</button>
                     </div>
 
-                    <div v-if="authMode === 'login'">
+                    <form v-if="authMode === 'login'" @submit.prevent="handleLogin">
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-2">{{ t.email_label }}</label>
                         <input type="email" v-model="email" class="input-glass w-full rounded-xl p-3 mb-4 font-bold" placeholder="name@example.com">
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-2">{{ t.password_label }}</label>
                         <input type="password" v-model="password" class="input-glass w-full rounded-xl p-3 mb-6 font-bold" placeholder="********">
-                        <button @click="handleLogin" :disabled="loading" class="btn-brand w-full text-white font-bold py-4 rounded-xl shadow-lg mb-4">{{ loading ? t.logging_in : t.login_btn }}</button>
-                        <button @click="authMode = 'forgot'" class="w-full text-xs text-slate-400 hover:text-orange-500 font-bold">{{ t.forgot_password }}</button>
-                    </div>
+                        <button type="submit" :disabled="loading" class="btn-brand w-full text-white font-bold py-4 rounded-xl shadow-lg mb-4">{{ loading ? t.logging_in : t.login_btn }}</button>
+                        <button type="button" @click="authMode = 'forgot'" class="w-full text-xs text-slate-400 hover:text-orange-500 font-bold">{{ t.forgot_password }}</button>
+                    </form>
 
-                    <div v-if="authMode === 'register'">
+                    <form v-if="authMode === 'register'" @submit.prevent="handleRegister">
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-2">{{ t.email_label }}</label>
                         <input type="email" v-model="email" class="input-glass w-full rounded-xl p-3 mb-4 font-bold" placeholder="name@example.com">
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-2">{{ t.set_password }}</label>
                         <input type="password" v-model="password" class="input-glass w-full rounded-xl p-3 mb-6 font-bold" placeholder="Min 6 chars">
-                        <button @click="handleRegister" :disabled="loading" class="btn-brand w-full text-white font-bold py-4 rounded-xl shadow-lg">{{ loading ? t.sending : t.register_btn }}</button>
-                    </div>
+                        <button type="submit" :disabled="loading" class="btn-brand w-full text-white font-bold py-4 rounded-xl shadow-lg">{{ loading ? t.sending : t.register_btn }}</button>
+                    </form>
 
                     <div v-if="authMode === 'verify'">
                         <h3 class="text-center font-bold text-slate-800 text-lg mb-2">{{ t.verify_title }}</h3>
@@ -86,7 +85,8 @@
                         <button @click="handleVerifyOtp" :disabled="loading" class="btn-brand w-full text-white font-bold py-4 rounded-xl shadow-lg mb-4">{{ loading ? t.verifying : t.confirm_btn }}</button>
                         <button @click="authMode = 'login'" class="w-full text-sm text-slate-400">{{ t.back_login }}</button>
                     </div>
-                     <div v-if="authMode === 'forgot'">
+                    
+                    <div v-if="authMode === 'forgot'">
                         <h3 class="text-lg font-bold text-slate-800 mb-4">{{ t.reset_title }}</h3>
                         <label class="block text-xs font-bold text-slate-400 uppercase mb-2">{{ t.email_label }}</label>
                         <input type="email" v-model="email" class="input-glass w-full rounded-xl p-3 mb-6 font-bold">
@@ -139,7 +139,10 @@
                                 <button @click="newBaby.gender = 'female'" :class="newBaby.gender === 'female' ? 'bg-pink-500 text-white ring-2 ring-pink-200 shadow-lg' : 'bg-white text-slate-400'" class="flex-1 py-3 rounded-xl font-bold border transition transform active:scale-95">{{ t.girl }}</button>
                             </div>
                         </div>
-                        <div><label class="text-xs font-bold text-slate-400 uppercase">{{ t.birth_date }}</label><input type="date" :max="todayDate" :lang="lang === 'en' ? 'en-US' : 'zh-CN'" v-model="newBaby.birth_date" class="input-glass w-full rounded-xl p-3 mt-1"></div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-400 uppercase">{{ t.birth_date }}</label>
+                            <input type="date" :max="todayDate" :lang="lang === 'en' ? 'en-US' : 'zh-CN'" :key="lang" v-model="newBaby.birth_date" class="input-glass w-full rounded-xl p-3 mt-1">
+                        </div>
                         <button @click="createBaby" :disabled="loading" class="btn-brand w-full text-white font-bold py-4 rounded-xl mt-4 shadow-xl">{{ loading ? t.saving : t.create_btn }}</button>
                     </div>
                 </div>
@@ -154,7 +157,8 @@
                                     <button v-if="isEditing" @click="cancelEdit" class="text-xs text-red-500 bg-red-100 px-3 py-1 rounded-full font-bold hover:bg-red-200 transition">Cancel</button>
                                 </h3>
                                 <div class="grid grid-cols-1 gap-4">
-                                    <input type="date" :max="todayDate" :lang="lang === 'en' ? 'en-US' : 'zh-CN'" v-model="input.date" class="input-glass rounded-xl p-3 text-sm font-bold text-slate-600">
+                                    <input type="date" :min="currentBaby.birth_date" :max="todayDate" :lang="lang === 'en' ? 'en-US' : 'zh-CN'" :key="lang" v-model="input.date" class="input-glass rounded-xl p-3 text-sm font-bold text-slate-600">
+                                    
                                     <div class="relative"><input type="number" v-model="input.weight" :placeholder="t.weight_ph" @input="calcPercentiles" class="input-glass w-full rounded-xl p-3 text-sm pr-16 font-bold"><span class="absolute right-3 top-3 text-xs font-bold text-orange-400 bg-orange-50 px-2 py-1 rounded">{{ percentiles.weight }}</span></div>
                                     <div class="relative"><input type="number" v-model="input.height" :placeholder="t.height_ph" @input="calcPercentiles" class="input-glass w-full rounded-xl p-3 text-sm pr-16 font-bold"><span class="absolute right-3 top-3 text-xs font-bold text-teal-500 bg-teal-50 px-2 py-1 rounded">{{ percentiles.height }}</span></div>
                                     <div class="relative"><input type="number" v-model="input.head" :placeholder="t.head_ph" @input="calcPercentiles" class="input-glass w-full rounded-xl p-3 text-sm pr-16 font-bold"><span class="absolute right-3 top-3 text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded">{{ percentiles.head }}</span></div>
@@ -242,14 +246,25 @@
             </div>
         </transition>
 
+        <transition name="fade">
+            <div v-if="showResetPasswordModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
+                <div class="glass-card w-full max-w-md p-8 rounded-3xl text-center shadow-2xl">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-2">{{ t.reset_modal_title }}</h3>
+                    <p class="text-slate-500 mb-6 text-sm">{{ t.reset_modal_desc }}</p>
+                    <input type="password" v-model="newPassword" class="input-glass w-full rounded-xl p-3 mb-6 font-bold" placeholder="New Password">
+                    <button @click="updatePassword" :disabled="loading" class="btn-brand w-full text-white font-bold py-4 rounded-xl shadow-lg">{{ loading ? t.saving : t.reset_confirm_btn }}</button>
+                </div>
+            </div>
+        </transition>
+
     </div>
 
     <script>
         const { createApp, ref, onMounted, watch, computed, nextTick } = Vue;
 
         const i18n = {
-            zh: { slogan: "您的 AI 育儿专家", login_tab: "登录", register_tab: "注册", login_btn: "安全登录", register_btn: "立即注册", forgot_password: "忘记密码?", reset_title: "重置密码", verify_title: "验证您的邮箱", send_reset_code: "发送重置代码", back_login: "返回登录", confirm_btn: "确认验证", set_password: "设置密码 (至少6位)", password_label: "密码", email_label: "邮箱地址", sending: "发送中...", send_btn: "获取验证码", code_sent_to: "验证码已发送至", code_label: "6 位数字验证码", verifying: "验证中...", login_confirm: "进入 BabyUp", back_email: "修改邮箱", my_babies: "宝宝列表", logout: "退出", no_baby: "欢迎！先添加一个宝宝档案吧", add_baby: "添加宝宝", add_another: "添加二宝/三宝", back: "返回", new_profile: "新宝宝档案", nickname: "宝宝小名", gender: "性别", boy: "👦 男宝", girl: "👧 女宝", birth_date: "出生日期", saving: "保存中...", create_btn: "创建档案", switch_baby: "切换", days_old: "天大", record_entry: "📝 今日成长记录", edit_mode: "✏️ 编辑记录 (修改后重新生成报告)", update_btn: "保存并生成报告", weight_ph: "体重 (kg)", height_ph: "身高 (cm)", head_ph: "头围 (cm, 选填)", ai_thinking: "AI 专家思考中...", gen_report: "生成 AI 成长解读 ✨", chart_title: "生长曲线", realtime: "实时", history_title: "📅 历史档案", view_report_btn: "📄 查看报告", gen_report_btn: "✨ 生成报告", report_title: "AI 深度解读", close: "关闭", connecting: "正在连接 BabyUp 云端...", edit: "编辑", del: "删除", no_report_yet: "暂无 AI 报告", outdated_hint: "数据更新后，可重新解读", regenerate: "重新生成报告", logging_in: "登录中...", weight_tab: "体重", height_tab: "身高", head_tab: "头围" },
-            en: { slogan: "Your AI Parenting Expert", login_tab: "Login", register_tab: "Register", login_btn: "Secure Login", register_btn: "Sign Up Now", forgot_password: "Forgot Password?", reset_title: "Reset Password", verify_title: "Verify Your Email", send_reset_code: "Send Reset Code", back_login: "Back to Login", confirm_btn: "Confirm Verify", set_password: "Set Password (min 6 chars)", password_label: "Password", email_label: "Email Address", sending: "Sending...", send_btn: "Get Code", code_sent_to: "Code sent to", code_label: "6-Digit Code", verifying: "Verifying...", login_confirm: "Enter BabyUp", back_email: "Change Email", my_babies: "My Babies", logout: "Logout", no_baby: "Welcome! Add a baby profile first", add_baby: "Add Baby", add_another: "Add Another Baby", back: "Back", new_profile: "New Profile", nickname: "Nickname", gender: "Gender", boy: "👦 Boy", girl: "👧 Girl", birth_date: "Birth Date", saving: "Saving...", create_btn: "Create Profile", switch_baby: "Switch", days_old: "days old", record_entry: "📝 Data Entry", edit_mode: "✏️ Edit Record", update_btn: "Save & Generate Report", weight_ph: "Weight (kg)", height_ph: "Height (cm)", head_ph: "Head Circ. (cm, optional)", ai_thinking: "AI Thinking...", gen_report: "Generate AI Report ✨", chart_title: "Growth Charts", realtime: "Live", history_title: "📅 History", view_report_btn: "📄 View Report", gen_report_btn: "✨ AI Report", report_title: "AI Insight", close: "Close", connecting: "Connecting to BabyUp...", edit: "Edit", del: "Del", no_report_yet: "No Report", outdated_hint: "Data changed? Regenerate report.", regenerate: "Regenerate Report", logging_in: "Logging in...", weight_tab: "Weight", height_tab: "Height", head_tab: "Head" }
+            zh: { slogan: "您的 AI 育儿专家", login_tab: "登录", register_tab: "注册", login_btn: "安全登录", register_btn: "立即注册", forgot_password: "忘记密码?", reset_title: "重置密码", verify_title: "验证您的邮箱", send_reset_code: "发送密码重置链接", back_login: "返回登录", confirm_btn: "确认验证", set_password: "设置密码 (至少6位)", password_label: "密码", email_label: "邮箱地址", sending: "发送中...", send_btn: "获取验证码", code_sent_to: "验证码已发送至", code_label: "6 位数字验证码", verifying: "验证中...", login_confirm: "进入 BabyUp", back_email: "修改邮箱", my_babies: "宝宝列表", logout: "退出", no_baby: "欢迎！先添加一个宝宝档案吧", add_baby: "添加宝宝", add_another: "添加二宝/三宝", back: "返回", new_profile: "新宝宝档案", nickname: "宝宝小名", gender: "性别", boy: "👦 男宝", girl: "👧 女宝", birth_date: "出生日期", saving: "保存中...", create_btn: "创建档案", switch_baby: "切换", days_old: "天大", record_entry: "📝 今日成长记录", edit_mode: "✏️ 编辑记录 (修改后重新生成报告)", update_btn: "保存并生成报告", weight_ph: "体重 (kg)", height_ph: "身高 (cm)", head_ph: "头围 (cm, 选填)", ai_thinking: "AI 专家思考中...", gen_report: "生成 AI 成长解读 ✨", chart_title: "生长曲线", realtime: "实时", history_title: "📅 历史档案", view_report_btn: "📄 查看报告", gen_report_btn: "✨ 生成报告", report_title: "AI 深度解读", close: "关闭", connecting: "正在连接 BabyUp 云端...", edit: "编辑", del: "删除", no_report_yet: "暂无 AI 报告", outdated_hint: "数据更新后，可重新解读", regenerate: "重新生成报告", logging_in: "登录中...", weight_tab: "体重", height_tab: "身高", head_tab: "头围", date_too_early: "日期无效：不能早于宝宝出生日期！", reset_modal_title: "🔒 设置新密码", reset_modal_desc: "请输入您的新密码以恢复访问权限", reset_confirm_btn: "更新密码" },
+            en: { slogan: "Your AI Parenting Expert", login_tab: "Login", register_tab: "Register", login_btn: "Secure Login", register_btn: "Sign Up Now", forgot_password: "Forgot Password?", reset_title: "Reset Password", verify_title: "Verify Your Email", send_reset_code: "Send Password Reset Link", back_login: "Back to Login", confirm_btn: "Confirm Verify", set_password: "Set Password (min 6 chars)", password_label: "Password", email_label: "Email Address", sending: "Sending...", send_btn: "Get Code", code_sent_to: "Code sent to", code_label: "6-Digit Code", verifying: "Verifying...", login_confirm: "Enter BabyUp", back_email: "Change Email", my_babies: "My Babies", logout: "Logout", no_baby: "Welcome! Add a baby profile first", add_baby: "Add Baby", add_another: "Add Another Baby", back: "Back", new_profile: "New Profile", nickname: "Nickname", gender: "Gender", boy: "👦 Boy", girl: "👧 Girl", birth_date: "Birth Date", saving: "Saving...", create_btn: "Create Profile", switch_baby: "Switch", days_old: "days old", record_entry: "📝 Data Entry", edit_mode: "✏️ Edit Record", update_btn: "Save & Generate Report", weight_ph: "Weight (kg)", height_ph: "Height (cm)", head_ph: "Head Circ. (cm, optional)", ai_thinking: "AI Thinking...", gen_report: "Generate AI Report ✨", chart_title: "Growth Charts", realtime: "Live", history_title: "📅 History", view_report_btn: "📄 View Report", gen_report_btn: "✨ AI Report", report_title: "AI Insight", close: "Close", connecting: "Connecting to BabyUp...", edit: "Edit", del: "Del", no_report_yet: "No Report", outdated_hint: "Data changed? Regenerate report.", regenerate: "Regenerate Report", logging_in: "Logging in...", weight_tab: "Weight", height_tab: "Height", head_tab: "Head", date_too_early: "Invalid Date: Cannot be earlier than birth date!", reset_modal_title: "🔒 Set New Password", reset_modal_desc: "Please enter your new password to regain access", reset_confirm_btn: "Update Password" }
         };
 
         createApp({
@@ -271,6 +286,10 @@
                 const standard = ref('who');
                 const activeChart = ref('weight');
                 const todayDate = new Date().toISOString().split('T')[0];
+
+                // 🚀 V7.0 新增: 密码重置状态
+                const showResetPasswordModal = ref(false);
+                const newPassword = ref('');
 
                 function changeStandard(s) { standard.value = s; nextTick(() => { calcPercentiles(); renderCharts(); }); }
 
@@ -310,8 +329,11 @@
                 async function handleLogin() { if(!email.value||!password.value) return; loading.value=true; const {data,error}=await supabase.auth.signInWithPassword({email:email.value,password:password.value}); loading.value=false; if(error)alert(error.message);else user.value=data.user; }
                 async function handleRegister() { if(!email.value||!password.value) return; if(password.value.length<6)return alert('Min 6'); loading.value=true; const {data,error}=await supabase.auth.signUp({email:email.value,password:password.value}); loading.value=false; if(error)alert(error.message);else {authMode.value='verify';sentCode.value=true;} }
                 async function handleVerifyOtp() { if(!otpToken.value) return; loading.value=true; const {data,error}=await supabase.auth.verifyOtp({email:email.value,token:otpToken.value,type:'signup'}); loading.value=false; if(error)alert(error.message);else {user.value=data.user;authMode.value='login';} }
-                async function sendResetCode() { if(!email.value) return; loading.value=true; const {error}=await supabase.auth.resetPasswordForEmail(email.value); loading.value=false; if(error)alert(error.message);else alert('Sent'); }
+                async function sendResetCode() { if(!email.value) return; loading.value=true; const {error}=await supabase.auth.resetPasswordForEmail(email.value, { redirectTo: window.location.href }); loading.value=false; if(error)alert(error.message);else alert(t.value.sending); }
                 async function signOut() { await supabase.auth.signOut(); user.value=null; babies.value=[]; currentBaby.value=null; authMode.value='login'; }
+                
+                // 🚀 V7.0 新增: 更新密码逻辑
+                async function updatePassword() { if(newPassword.value.length<6) return alert('Min 6 chars'); loading.value=true; const {error} = await supabase.auth.updateUser({password: newPassword.value}); loading.value=false; if(error) alert(error.message); else { alert('Success!'); showResetPasswordModal.value=false; newPassword.value=''; } }
 
                 async function fetchBabies() { const {data}=await supabase.from('babies').select('*').order('created_at',{ascending:false}); babies.value=data||[]; }
                 async function createBaby() { if(!newBaby.value.name||!newBaby.value.birth_date)return; if(new Date(newBaby.value.birth_date)>new Date())return alert('No future date'); loading.value=true; const {error}=await supabase.from('babies').insert([{user_id:user.value.id,...newBaby.value}]); loading.value=false; if(!error){await fetchBabies();showAddBabyForm.value=false;} }
@@ -335,20 +357,23 @@
                     percentiles.value.head = getPct('head', input.value.head);
                 }
 
-                // 🌟 V6.1 核心修改：强制全自动生成报告
                 async function submitRecord() {
                     const w=parseFloat(input.value.weight); const h=parseFloat(input.value.height);
                     if(!w||!h) return alert('Input required');
                     if(w<1||w>50) return alert('Invalid weight'); if(h<20||h>150) return alert('Invalid height');
-                    if(new Date(input.value.date)>new Date()) return alert('No future date');
+                    
+                    const recordDate = new Date(input.value.date);
+                    const birthDate = new Date(currentBaby.value.birth_date);
+                    
+                    // 🚀 V7.0 严防死守: 彻底拦截出生前的日期，不再依赖前端 min 属性
+                    if(recordDate < birthDate) return alert(t.value.date_too_early);
+                    if(recordDate > new Date()) return alert('No future date');
                     
                     loading.value=true;
-                    const days=Math.ceil((new Date(input.value.date)-new Date(currentBaby.value.birth_date))/86400000);
+                    const days=Math.ceil((recordDate - birthDate)/86400000);
                     const payload={baby_id:currentBaby.value.id,date:input.value.date,days,weight:w,height:h,head:input.value.head||null};
 
                     try {
-                        // 1. 强制生成 AI 报告 (无论是新增还是编辑，都重新生成)
-                        // 之前这里有 if(!isEditing) 限制，现在去掉了
                         let aiReport = null;
                         const aiRes = await fetch('/api/analyze', {
                             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -362,7 +387,6 @@
                             throw new Error("AI Generation Failed");
                         }
 
-                        // 2. 将 AI 报告加入 payload 保存到数据库
                         if(aiReport) payload.ai_report = aiReport;
 
                         if (isEditing.value) {
@@ -373,7 +397,6 @@
                             if(error) throw error;
                         }
                         
-                        // 3. 强制弹窗展示新报告 (Aha Moment!)
                         currentRecord.value = { ...payload, ai_report: aiReport };
                         showModal.value = true;
 
@@ -388,21 +411,18 @@
                     }
                 }
 
-                // 🌟 V6.1 修复重新生成逻辑
                 async function regenerateReport(record) { 
                     loading.value=true; 
                     try { 
                         const aiRes=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({days:record.days,weight:record.weight,height:record.height,head:record.head,gender:currentBaby.value.gender,name:currentBaby.value.name,lang:lang.value})}); 
                         if(aiRes.ok){ 
                             const json=await aiRes.json(); 
-                            // 保存到数据库
                             await supabase.from('records').update({ai_report:json.result}).eq('id',record.id); 
-                            // 更新本地状态并强制弹窗
                             record.ai_report=json.result; 
                             currentRecord.value.ai_report=json.result; 
-                            showModal.value = true; // 确保弹窗打开
+                            showModal.value = true; 
                         } else {
-                            throw new Error('AI Service Error'); // 抛出错误以便被 catch 捕获
+                            throw new Error('AI Service Error'); 
                         }
                     } catch(e){ 
                         alert('Error generating report: ' + e.message); 
@@ -450,7 +470,16 @@
                         const { data: { session } } = await supabase.auth.getSession();
                         user.value = session?.user || null;
                         globalLoading.value = false;
-                        supabase.auth.onAuthStateChange((_, s) => { user.value = s?.user || null; if(user.value) fetchBabies(); });
+
+                        // 🚀 V7.0 新增: 监听密码重置事件
+                        supabase.auth.onAuthStateChange((event, session) => { 
+                            user.value = session?.user || null; 
+                            if(user.value) fetchBabies();
+                            if(event === 'PASSWORD_RECOVERY') {
+                                showResetPasswordModal.value = true; // 拦截！强制改密码
+                            }
+                        });
+
                         if(user.value) fetchBabies();
                     } catch (e) {
                         console.error('App Init Error:', e.message);
@@ -458,7 +487,7 @@
                     }
                 });
 
-                return { user, authMode, email, password, otpToken, sentCode, loading, globalLoading, babies, currentBaby, showAddBabyForm, newBaby, records, input, isEditing, percentiles, submitRecord, editRecord, cancelEdit, deleteRecord, showModal, currentRecord, regenerateReport, openReport, handleLogin, handleRegister, handleVerifyOtp, sendResetCode, signOut, createBaby, selectBaby, calculateAge, lang, t, toggleLang, changeStandard, standard, calcPercentiles, renderMarkdown, todayDate, activeChart, nextTick, renderCharts };
+                return { user, authMode, email, password, otpToken, sentCode, loading, globalLoading, babies, currentBaby, showAddBabyForm, newBaby, records, input, isEditing, percentiles, submitRecord, editRecord, cancelEdit, deleteRecord, showModal, currentRecord, regenerateReport, openReport, handleLogin, handleRegister, handleVerifyOtp, sendResetCode, signOut, createBaby, selectBaby, calculateAge, lang, t, toggleLang, changeStandard, standard, calcPercentiles, renderMarkdown, todayDate, activeChart, nextTick, renderCharts, showResetPasswordModal, newPassword, updatePassword };
             }
         }).mount('#app');
     </script>
