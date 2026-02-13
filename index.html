@@ -31,10 +31,10 @@
         .chart-tab { @apply px-4 py-2 text-sm font-bold rounded-t-xl border-b-2 border-transparent text-slate-400 transition-all; }
         .chart-tab.active { @apply text-slate-700 bg-slate-50 border-orange-400; }
         
-        /* 🚀 V9.1: 字体进一步缩小，颜色调淡，更显精致专业 */
+        /* 修复了这里的闭合标签 */
         .academic-footnote { @apply mt-5 text-[9px] text-slate-400/80 border-t border-slate-100/80 pt-3 font-sans leading-relaxed tracking-wide; }
         .source-tag { @apply inline-block px-1.5 py-0.5 rounded-[3px] bg-slate-100 text-slate-500 font-bold mr-1.5 text-[8px] tracking-wider; }
-    </script>
+    </style>
     <script>
         window.onerror = function(msg, url, line) {
             console.error("Global Error:", msg); 
@@ -283,14 +283,14 @@
 
         const i18n = {
             zh: { slogan: "您的 AI 育儿专家", login_tab: "登录", register_tab: "注册", login_btn: "安全登录", register_btn: "立即注册", forgot_password: "忘记密码?", reset_title: "重置密码", verify_title: "验证您的邮箱", send_reset_code: "发送密码重置链接", back_login: "返回登录", confirm_btn: "确认验证", set_password: "设置密码 (至少6位)", password_label: "密码", email_label: "邮箱地址", sending: "发送中...", send_btn: "获取验证码", code_sent_to: "验证码已发送至", code_label: "6 位数字验证码", verifying: "验证中...", login_confirm: "进入 BabyUp", back_email: "修改邮箱", my_babies: "宝宝列表", logout: "退出", no_baby: "欢迎！先添加一个宝宝档案吧", add_baby: "添加宝宝", add_another: "添加二宝/三宝", back: "返回", new_profile: "新宝宝档案", nickname: "宝宝小名", gender: "性别", boy: "👦 男宝", girl: "👧 女宝", birth_date: "出生日期", saving: "保存中...", create_btn: "创建档案", switch_baby: "切换", days_old: "天大", record_entry: "📝 今日成长记录", edit_mode: "✏️ 编辑记录 (修改后重新生成报告)", update_btn: "保存并生成报告", weight_ph: "体重 (kg)", height_ph: "身高 (cm)", head_ph: "头围 (cm, 选填)", ai_thinking: "AI 专家思考中...", gen_report: "生成 AI 成长解读 ✨", chart_title: "生长曲线", realtime: "实时", history_title: "📅 历史档案", view_report_btn: "📄 查看报告", gen_report_btn: "✨ 生成报告", report_title: "AI 深度解读", close: "关闭", connecting: "正在连接 BabyUp 云端...", edit: "编辑", del: "删除", no_report_yet: "暂无 AI 报告", outdated_hint: "数据更新后，可重新解读", regenerate: "重新生成报告", logging_in: "登录中...", weight_tab: "体重", height_tab: "身高", head_tab: "头围", date_too_early: "日期无效：不能早于宝宝出生日期！", reset_modal_title: "🔒 设置新密码", reset_modal_desc: "请输入您的新密码以恢复访问权限", reset_confirm_btn: "更新密码",
-                // 🚀 V9.1 新增中文引用
+                // V9.1 新增中文引用
                 source_who: "世界卫生组织 (WHO) 儿童生长标准 (2006)",
                 source_note_who: "该标准描述了儿童在最佳健康环境下的理想生长状态，是目前全球通用的 0-5 岁评估金标准。",
                 source_china: "WS/T 423—2022 7岁以下儿童生长标准",
                 source_note: "中华人民共和国国家卫生健康委员会发布 (2022-09-19) | 2023-03-01 实施"
             },
             en: { slogan: "Your AI Parenting Expert", login_tab: "Login", register_tab: "Register", login_btn: "Secure Login", register_btn: "Sign Up Now", forgot_password: "Forgot Password?", reset_title: "Reset Password", verify_title: "Verify Your Email", send_reset_code: "Send Password Reset Link", back_login: "Back to Login", confirm_btn: "Confirm Verify", set_password: "Set Password (min 6 chars)", password_label: "Password", email_label: "Email Address", sending: "Sending...", send_btn: "Get Code", code_sent_to: "Code sent to", code_label: "6-Digit Code", verifying: "Verifying...", login_confirm: "Enter BabyUp", back_email: "Change Email", my_babies: "My Babies", logout: "Logout", no_baby: "Welcome! Add a baby profile first", add_baby: "Add Baby", add_another: "Add Another Baby", back: "Back", new_profile: "New Profile", nickname: "Nickname", gender: "Gender", boy: "👦 Boy", girl: "👧 Girl", birth_date: "Birth Date", saving: "Saving...", create_btn: "Create Profile", switch_baby: "Switch", days_old: "days old", record_entry: "📝 Data Entry", edit_mode: "✏️ Edit Record", update_btn: "Save & Generate Report", weight_ph: "Weight (kg)", height_ph: "Height (cm)", head_ph: "Head Circ. (cm, optional)", ai_thinking: "AI Thinking...", gen_report: "Generate AI Report ✨", chart_title: "Growth Charts", realtime: "Live", history_title: "📅 History", view_report_btn: "📄 View Report", gen_report_btn: "✨ AI Report", report_title: "AI Insight", close: "Close", connecting: "Connecting to BabyUp...", edit: "Edit", del: "Del", no_report_yet: "No Report", outdated_hint: "Data changed? Regenerate report.", regenerate: "Regenerate Report", logging_in: "Logging in...", weight_tab: "Weight", height_tab: "Height", head_tab: "Head", date_too_early: "Invalid Date: Cannot be earlier than birth date!", reset_modal_title: "🔒 Set New Password", reset_modal_desc: "Please enter your new password to regain access", reset_confirm_btn: "Update Password",
-                // 🚀 V9.1 新增英文引用
+                // V9.1 新增英文引用
                 source_who: "WHO Child Growth Standards (2006). World Health Organization.",
                 source_note_who: "Current global gold standard for assessing optimal growth in children aged 0-5 years.",
                 source_china: "WS/T 423—2022 Growth Standard for Children under 7 Years of Age",
@@ -329,7 +329,7 @@
                     }); 
                 }
 
-                // 🚀 V9.0: 医疗数据引擎
+                // V9.0: 医疗数据引擎
                 const growthData = {
                     who: {
                         weight: { 
@@ -387,7 +387,7 @@
                     const getPct = (type, val) => {
                         const numVal = parseFloat(val);
                         if (!numVal) return '';
-                        // 🚀 V9.0: 动态读取当前选中的 standard (china/who)
+                        // V9.0: 动态读取当前选中的 standard (china/who)
                         const p50 = growthData[standard.value][type][gender].p50[month];
                         const diff = ((numVal - p50) / p50) * 100;
                         if (Math.abs(diff) < 5) return 'P50'; if (diff > 20) return '>P97'; if (diff > 10) return 'P85'; if (diff < -20) return '<P3'; if (diff < -10) return 'P15'; return 'Normal';
@@ -502,7 +502,7 @@
                     const gender = currentBaby.value.gender;
                     const type = activeChart.value;
                     
-                    // 🚀 V9.0: 动态获取当前标准的数据
+                    // V9.0: 动态获取当前标准的数据
                     const stdData = growthData[standard.value][type][gender];
                     const getStdPoints = (arr) => sorted.map(r => arr[Math.min(Math.floor(r.days/30), 12)]);
                     const colors = { weight: '#F472B6', height: '#2DD4BF', head: '#A78BFA' };
