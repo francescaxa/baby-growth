@@ -31,11 +31,10 @@
         .chart-tab { @apply px-4 py-2 text-sm font-bold rounded-t-xl border-b-2 border-transparent text-slate-400 transition-all; }
         .chart-tab.active { @apply text-slate-700 bg-slate-50 border-orange-400; }
         
-        /* 🚀 V9.3: 优化引用样式，标题加粗加深 */
         .reference-section { @apply mt-6 border-t border-slate-100 pt-4; }
         .ref-group { @apply mb-3; }
-        /* 这里改成了 font-extrabold 和 text-slate-500 */
-        .ref-title { @apply text-[10px] font-extrabold text-slate-500 mb-1 flex items-center gap-1 uppercase tracking-wide; } 
+        /* 🚀 V9.4: 加上 font-sans 和 font-black，让标题变得非常硬朗 */
+        .ref-title { @apply text-[10px] font-black text-slate-500 mb-1 flex items-center gap-1 font-sans uppercase tracking-wide; } 
         .ref-content { @apply text-[9px] text-slate-400/80 leading-relaxed font-sans text-justify tracking-wide; }
         .source-tag { @apply inline-block px-1.5 py-0.5 rounded-[3px] bg-slate-100 text-slate-500 font-bold mr-1.5 text-[8px] tracking-wider; }
     </style>
